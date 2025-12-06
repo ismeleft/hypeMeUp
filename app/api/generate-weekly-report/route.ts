@@ -1,6 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getThisWeekLogs, createWeeklyReport, createCareerReport } from '@/lib/notion';
-import { analyzeResumeBullets, type DailyLogForAI } from '@/lib/openai';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  getThisWeekLogs,
+  createWeeklyReport,
+  createCareerReport,
+} from "@/lib/notion";
+import { analyzeResumeBullets, type DailyLogForAI } from "@/lib/openai";
+import { NotionLogPage } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Failed to fetch weekly logs',
+          error: "Failed to fetch weekly logs",
         },
         { status: 500 }
       );
@@ -23,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'No logs found for this week',
+          error: "No logs found for this week",
         },
         { status: 400 }
       );
@@ -37,10 +42,10 @@ export async function POST(request: NextRequest) {
 
     logs.forEach((log: any) => {
       const properties = log.properties;
-      const category = properties['Tag']?.select?.name;
-      const impact = properties['評分']?.number || 0;
-      const content = properties['內容']?.rich_text?.[0]?.text?.content || '';
-      const date = properties['日期']?.date?.start || '';
+      const category = properties["Tag"]?.select?.name;
+      const impact = properties["評分"]?.number || 0;
+      const content = properties["內容"]?.rich_text?.[0]?.text?.content || "";
+      const date = properties["日期"]?.date?.start || "";
 
       if (category) {
         categories.set(category, (categories.get(category) || 0) + 1);
@@ -55,7 +60,7 @@ export async function POST(request: NextRequest) {
         logsForAI.push({
           date,
           content,
-          category: category || 'Other',
+          category: category || "Other",
           impact,
         });
       }
@@ -73,16 +78,21 @@ export async function POST(request: NextRequest) {
     // 計算週次 (ISO week number)
     const startOfYear = new Date(today.getFullYear(), 0, 1);
     const weekNumber = Math.ceil(
-      ((today.getTime() - startOfYear.getTime()) / 86400000 + startOfYear.getDay() + 1) / 7
+      ((today.getTime() - startOfYear.getTime()) / 86400000 +
+        startOfYear.getDay() +
+        1) /
+        7
     );
 
-    const weekLabel = `${today.getFullYear()}-W${weekNumber.toString().padStart(2, '0')}`;
-    const dateStart = startOfWeek.toISOString().split('T')[0];
-    const dateEnd = endOfWeek.toISOString().split('T')[0];
+    const weekLabel = `${today.getFullYear()}-W${weekNumber
+      .toString()
+      .padStart(2, "0")}`;
+    const dateStart = startOfWeek.toISOString().split("T")[0];
+    const dateEnd = endOfWeek.toISOString().split("T")[0];
 
     // 4. 建立週報
     const tags = Array.from(categories.keys());
-    const weeklyContent = contentItems.join('\n');
+    const weeklyContent = contentItems.join("\n");
 
     const result = await createWeeklyReport({
       week: weekLabel,
@@ -98,7 +108,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: result.error || 'Failed to create weekly report',
+          error: result.error || "Failed to create weekly report",
         },
         { status: 500 }
       );
@@ -108,19 +118,25 @@ export async function POST(request: NextRequest) {
     const resumeAnalysis = await analyzeResumeBullets(logsForAI);
     let resumeBulletsCreated = 0;
 
-    if (resumeAnalysis.success && resumeAnalysis.result.hasResumeWorthyContent) {
+    if (
+      resumeAnalysis.success &&
+      resumeAnalysis.result.hasResumeWorthyContent
+    ) {
       // 將建議的履歷條目寫入 Notion
-      for (const bullet of resumeAnalysis.result.bullets) {
-        const bulletResult = await createCareerReport({
-          bulletPoint: bullet.text,
-          type: bullet.category,
-          reasoning: bullet.reasoning,
-        });
+      // 使用 Promise.allSettled 來並行處理
+      const bulletResults = await Promise.allSettled(
+        resumeAnalysis.result.bullets.map((bullet) =>
+          createCareerReport({
+            bulletPoint: bullet.text,
+            type: bullet.category,
+            reasoning: bullet.reasoning,
+          })
+        )
+      );
 
-        if (bulletResult.success) {
-          resumeBulletsCreated++;
-        }
-      }
+      resumeBulletsCreated = bulletResults.filter(
+        (result) => result.status === "fulfilled" && result.value.success
+      ).length;
     }
 
     // 6. 回傳統計資料
@@ -136,7 +152,8 @@ export async function POST(request: NextRequest) {
         categories: Object.fromEntries(categories),
         resumeAnalysis: resumeAnalysis.success
           ? {
-              hasResumeWorthyContent: resumeAnalysis.result.hasResumeWorthyContent,
+              hasResumeWorthyContent:
+                resumeAnalysis.result.hasResumeWorthyContent,
               bulletsCreated: resumeBulletsCreated,
               bullets: resumeAnalysis.result.bullets,
             }
@@ -146,11 +163,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error generating weekly report:', error);
+    console.error("Error generating weekly report:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: error instanceof Error ? error.message : "Internal server error",
       },
       { status: 500 }
     );

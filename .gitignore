@@ -42,4 +42,9 @@ yarn-error.log*
 next-env.d.ts
 
 .claude
-.md
+
+# Project-specific markdown files (keep README and docs)
+/description.md
+/plan.md
+/NOTION_SETUP.md
+/UI_COMPLETE.md

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
+import { NotionLogPage } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,14 +8,38 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '5');
 
-    // 直接在這裡初始化 Notion client
+    // 驗證環境變數
+    const apiKey = process.env.NOTION_API_KEY;
+    const databaseId = process.env.NOTION_DATABASE_ID_LOGS;
+
+    if (!apiKey) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'NOTION_API_KEY is not configured',
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!databaseId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'NOTION_DATABASE_ID_LOGS is not configured',
+        },
+        { status: 500 }
+      );
+    }
+
+    // 初始化 Notion client
     const notion = new Client({
-      auth: process.env.NOTION_API_KEY,
+      auth: apiKey,
     });
 
     // 直接查詢 Notion
     const response = await notion.databases.query({
-      database_id: process.env.NOTION_DATABASE_ID_LOGS!,
+      database_id: databaseId,
       sorts: [
         {
           property: '建立時間',
@@ -24,23 +49,8 @@ export async function GET(request: NextRequest) {
       page_size: limit,
     });
 
-    const result = {
-      success: true,
-      logs: response.results,
-    };
-
-    if (!result.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: result.error || 'Failed to fetch recent logs',
-        },
-        { status: 500 }
-      );
-    }
-
     // 轉換 Notion 格式為前端需要的格式
-    const wins = result.logs.map((page: any) => {
+    const wins = response.results.map((page: any) => {
       const properties = page.properties;
 
       return {

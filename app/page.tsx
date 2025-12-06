@@ -16,9 +16,10 @@ import ConfettiEffect from "@/components/ConfettiEffect";
 
 // 模擬 Stranger Things 風格的微粒 (The Upside Down Spores)
 const Spore = ({ delay, index }: { delay: number; index: number }) => {
-  const [startX] = useState(() => (index * 71) % 100); // 使用 index 生成固定的 x 位置百分比
-  const [endX] = useState(() => (index * 37) % 100);
-  const [duration] = useState(() => 15 + (index % 10));
+  // 使用 index 生成固定的位置和動畫參數,避免在 React 嚴格模式下重新渲染時產生不一致的結果
+  const startX = (index * 71) % 100;
+  const endX = (index * 37) % 100;
+  const duration = 15 + (index % 10);
 
   return (
     <motion.div

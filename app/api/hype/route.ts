@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDailyLog } from '@/lib/notion';
+import { VALID_CATEGORIES, IMPACT_MIN, IMPACT_MAX, isValidCategory, isValidImpact } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,23 +20,22 @@ export async function POST(request: NextRequest) {
     }
 
     // 驗證 impact 範圍
-    if (impact < 1 || impact > 5) {
+    if (!isValidImpact(impact)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Impact must be between 1 and 5',
+          error: `Impact must be between ${IMPACT_MIN} and ${IMPACT_MAX}`,
         },
         { status: 400 }
       );
     }
 
     // 驗證 category
-    const validCategories = ['Project', 'Learning', 'Communication', 'Firefighting'];
-    if (!validCategories.includes(category)) {
+    if (!isValidCategory(category)) {
       return NextResponse.json(
         {
           success: false,
-          error: `Invalid category. Must be one of: ${validCategories.join(', ')}`,
+          error: `Invalid category. Must be one of: ${VALID_CATEGORIES.join(', ')}`,
         },
         { status: 400 }
       );
