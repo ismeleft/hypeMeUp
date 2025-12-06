@@ -172,6 +172,7 @@ export interface WeeklyReportInput {
     end: string;
   };
   tags?: string[];      // Tag
+  content?: string;     // 內容 (本週做了什麼)
 }
 
 /**
@@ -202,6 +203,18 @@ export async function createWeeklyReport(input: WeeklyReportInput) {
             end: input.dateRange.end,
           },
         },
+        // 內容 (Rich text) - optional
+        ...(input.content && {
+          '內容': {
+            rich_text: [
+              {
+                text: {
+                  content: input.content,
+                },
+              },
+            ],
+          },
+        }),
         // Tag (Multi-select) - optional
         ...(input.tags && input.tags.length > 0 && {
           'Tag': {
@@ -272,7 +285,7 @@ export async function createCareerReport(input: CareerReportInput) {
         },
         // Reasoning (Text) - optional
         ...(input.reasoning && {
-          'Reasoning': {
+          ' Reasoning': {
             rich_text: [
               {
                 text: {

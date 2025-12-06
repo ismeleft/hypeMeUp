@@ -20,4 +20,45 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* No additional spacing overrides - let Tailwind handle everything */
+/* 震動動畫 - Stranger Things 風格 */
+@keyframes shake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-10px, -5px) rotate(-2deg); }
+  20% { transform: translate(10px, 5px) rotate(2deg); }
+  30% { transform: translate(-10px, 5px) rotate(-2deg); }
+  40% { transform: translate(10px, -5px) rotate(2deg); }
+  50% { transform: translate(-10px, -5px) rotate(-2deg); }
+  60% { transform: translate(10px, 5px) rotate(2deg); }
+  70% { transform: translate(-10px, 5px) rotate(-2deg); }
+  80% { transform: translate(10px, -5px) rotate(2deg); }
+  90% { transform: translate(-5px, -2px) rotate(-1deg); }
+}
+
+/* 閃爍文字效果 - Stranger Things 風格 */
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    text-shadow:
+      0 0 10px #ef4444,
+      0 0 20px #b91c1c,
+      0 0 30px #7f1d1d;
+  }
+  20%, 24%, 55% {
+    opacity: 0.4;
+    text-shadow: none;
+  }
+}
+
+.flicker-text {
+  animation: flicker 3s infinite;
+}
+
+/* 霓虹發光效果 */
+.neon-glow {
+  text-shadow:
+    0 0 5px #ef4444,
+    0 0 10px #ef4444,
+    0 0 20px #ef4444,
+    0 0 40px #dc2626,
+    0 0 80px #dc2626;
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getThisWeekLogs, createWeeklyReport } from '@/lib/notion';
+import { getThisWeekLogs, createWeeklyReport, createCareerReport } from '@/lib/notion';
+import { analyzeResumeBullets, type DailyLogForAI } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,16 +32,33 @@ export async function POST(request: NextRequest) {
     // 2. 整理數據
     const categories = new Map<string, number>();
     let totalImpact = 0;
+    const contentItems: string[] = [];
+    const logsForAI: DailyLogForAI[] = [];
 
     logs.forEach((log: any) => {
       const properties = log.properties;
       const category = properties['Tag']?.select?.name;
       const impact = properties['評分']?.number || 0;
+      const content = properties['內容']?.rich_text?.[0]?.text?.content || '';
+      const date = properties['日期']?.date?.start || '';
 
       if (category) {
         categories.set(category, (categories.get(category) || 0) + 1);
       }
       totalImpact += impact;
+
+      // 收集內容
+      if (content) {
+        contentItems.push(`• ${content}`);
+
+        // 準備 AI 分析用的資料
+        logsForAI.push({
+          date,
+          content,
+          category: category || 'Other',
+          impact,
+        });
+      }
     });
 
     // 3. 計算週次和日期範圍
@@ -64,6 +82,8 @@ export async function POST(request: NextRequest) {
 
     // 4. 建立週報
     const tags = Array.from(categories.keys());
+    const weeklyContent = contentItems.join('\n');
+
     const result = await createWeeklyReport({
       week: weekLabel,
       dateRange: {
@@ -71,6 +91,7 @@ export async function POST(request: NextRequest) {
         end: dateEnd,
       },
       tags,
+      content: weeklyContent,
     });
 
     if (!result.success) {
@@ -83,7 +104,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. 回傳統計資料
+    // 5. 使用 AI 分析履歷建議
+    const resumeAnalysis = await analyzeResumeBullets(logsForAI);
+    let resumeBulletsCreated = 0;
+
+    if (resumeAnalysis.success && resumeAnalysis.result.hasResumeWorthyContent) {
+      // 將建議的履歷條目寫入 Notion
+      for (const bullet of resumeAnalysis.result.bullets) {
+        const bulletResult = await createCareerReport({
+          bulletPoint: bullet.text,
+          type: bullet.category,
+          reasoning: bullet.reasoning,
+        });
+
+        if (bulletResult.success) {
+          resumeBulletsCreated++;
+        }
+      }
+    }
+
+    // 6. 回傳統計資料
     return NextResponse.json({
       success: true,
       report: {
@@ -94,6 +134,15 @@ export async function POST(request: NextRequest) {
         totalImpact,
         averageImpact: (totalImpact / logs.length).toFixed(1),
         categories: Object.fromEntries(categories),
+        resumeAnalysis: resumeAnalysis.success
+          ? {
+              hasResumeWorthyContent: resumeAnalysis.result.hasResumeWorthyContent,
+              bulletsCreated: resumeBulletsCreated,
+              bullets: resumeAnalysis.result.bullets,
+            }
+          : {
+              error: resumeAnalysis.error,
+            },
       },
     });
   } catch (error) {

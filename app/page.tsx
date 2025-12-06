@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Flame,
 } from "lucide-react";
+import ConfettiEffect from "@/components/ConfettiEffect";
 
 // 模擬 Stranger Things 風格的微粒 (The Upside Down Spores)
 const Spore = ({ delay, index }: { delay: number; index: number }) => {
@@ -123,6 +124,15 @@ export default function HypePage() {
         // 成功
         setShowSuccess(true);
         setEntryLogNumber(Math.floor(Math.random() * 9999));
+
+        // 畫面震動效果
+        if (typeof window !== "undefined") {
+          document.body.style.animation = "shake 0.5s";
+          setTimeout(() => {
+            document.body.style.animation = "";
+          }, 500);
+        }
+
         // 重新載入最近的記錄
         loadRecentWins();
       } else {
@@ -178,6 +188,9 @@ export default function HypePage() {
 
   return (
     <div className="relative min-h-screen bg-slate-950 overflow-x-hidden flex flex-col items-center justify-center font-serif text-slate-100 selection:bg-red-900 selection:text-white pb-10">
+      {/* 彩帶效果 */}
+      <ConfettiEffect trigger={showSuccess} />
+
       {/* 背景特效層 */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black z-0" />
       <motion.div
@@ -232,25 +245,25 @@ export default function HypePage() {
               </div>
 
               {/* FORM */}
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-20">
                 {/* 1. TEXT INPUT */}
                 <div className="relative group">
                   <motion.textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="WHAT DID YOU CRUSH TODAY?"
-                    className="w-full bg-slate-900/80 border border-red-900/50 rounded-sm p-4 text-xl text-red-50 placeholder-red-900/40 focus:outline-none focus:border-red-500 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all resize-none min-h-[120px] font-sans tracking-wider backdrop-blur-sm"
+                    className="w-full bg-slate-900/80 border border-red-900/50 rounded-sm p-8 text-xl text-red-50 placeholder-red-900/40 focus:outline-none focus:border-red-500 focus:shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all resize-none min-h-[160px] font-sans tracking-wider backdrop-blur-sm"
                   />
                   {/* 裝飾邊角 */}
                   <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-red-500" />
                   <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-red-500" />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
                   {/* 2. CATEGORY SELECTOR */}
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     <label className="text-xs text-red-500 font-mono tracking-[0.2em] uppercase block mb-2 opacity-80"></label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-6">
                       {categories.map((cat) => {
                         const Icon = cat.icon;
                         const isSelected = category === cat.id;
@@ -262,7 +275,7 @@ export default function HypePage() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.95 }}
                             className={`
-                              relative flex items-center justify-center gap-2 py-4 px-3 border transition-all duration-300
+                              relative flex items-center justify-center gap-3 py-6 px-5 border transition-all duration-300
                               ${
                                 isSelected
                                   ? "bg-red-900/40 border-red-500 text-white shadow-[0_0_15px_rgba(220,38,38,0.4)]"
@@ -285,9 +298,9 @@ export default function HypePage() {
                   </div>
 
                   {/* 3. IMPACT RATING (VOLTAGE) */}
-                  <div className="space-y-4">
+                  <div className="space-y-8">
                     <label className="text-xs text-red-500 font-mono tracking-[0.2em] uppercase block mb-2 opacity-80"></label>
-                    <div className="flex justify-between items-center h-full bg-slate-900/50 border border-red-900/30 p-4 rounded-sm relative overflow-hidden">
+                    <div className="flex justify-between items-center h-full bg-slate-900/50 border border-red-900/30 p-8 rounded-sm relative overflow-hidden">
                       {/* 背景格線 */}
                       <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(153,27,27,0.1)_50%,transparent_51%)] bg-[length:20%_100%] pointer-events-none" />
 
@@ -322,7 +335,7 @@ export default function HypePage() {
                 </div>
 
                 {/* SUBMIT BUTTON AREA */}
-                <div className="pt-8 flex flex-col items-center gap-4">
+                <div className="pt-20 flex flex-col items-center gap-10">
                   <div className="flex items-center space-x-2 text-red-800 text-[10px] font-mono tracking-widest uppercase">
                     <Ghost className="w-3 h-3 animate-pulse" />
                     <span>Psychokinetic Energy: {hypeLevel}%</span>
@@ -368,7 +381,7 @@ export default function HypePage() {
               key="success"
               initial={{ opacity: 0, y: 50, rotateX: -90 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
-              className="text-center space-y-8 py-10"
+              className="text-center space-y-16 py-12"
             >
               <motion.div
                 animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
@@ -426,7 +439,7 @@ export default function HypePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1, duration: 0.6 }}
-            className="mt-16 space-y-6"
+            className="mt-32 space-y-12"
           >
             <div className="flex items-center justify-between border-b border-red-900/30 pb-3">
               <h2 className="text-red-500 text-lg font-bold uppercase tracking-widest">
@@ -455,7 +468,7 @@ export default function HypePage() {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-12">
               {isLoadingWins ? (
                 <div className="text-center py-8">
                   <div className="spinner mx-auto" />
