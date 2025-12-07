@@ -69,7 +69,10 @@ export async function POST(request: NextRequest) {
     // 3. 計算週次和日期範圍
     const today = new Date();
     const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
+    // 處理禮拜日的情況 (getDay() = 0)
+    const dayOfWeek = today.getDay();
+    const daysFromMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    startOfWeek.setDate(today.getDate() + daysFromMonday); // Monday
     startOfWeek.setHours(0, 0, 0, 0);
 
     const endOfWeek = new Date(startOfWeek);
