@@ -45,37 +45,34 @@ export async function analyzeResumeBullets(
       .map((log) => `- ${log.date} [${log.category}] (評分: ${log.impact}/5) ${log.content}`)
       .join('\n');
 
-    const prompt = `你是一位頂尖的履歷顧問，專門幫助工程師打造 ATS-friendly 的履歷。
+    const prompt = `你是一位嚴格的履歷顧問，專門幫助工程師篩選並撰寫真正高質量的履歷條目。
 
-本週工作記錄：
+本週工作記錄（包含自我評分 1-5）：
 ${logsText}
 
-請分析是否有值得寫進履歷的成就。
+任務：請從中篩選出真正值得寫入「年度績效回顧」或「求職履歷」的亮點。
 
-判斷標準（必須滿足至少一項）：
-1. 可量化的影響（時間節省、成本降低、效率提升）
-2. 技術突破或創新
-3. 跨團隊協作或領導力展現
-4. 重大專案完成
-5. 學習並應用新技術/框架
+篩選與判斷標準（嚴格執行）：
+1. **重視影響力**：優先考慮評分 (Impact) 為 4 或 5 的項目。評分較低的項目除非有明顯的技術深度或長期價值，否則應直接忽略。
+2. **排除日常瑣事**：一般的會議、簡單的 Bug Fix、文檔維護、例行性依賴更新等，**不應**納入履歷。
+3. **成果導向**：只收錄有明確「產出」或「解決了困難問題」的項目。
 
-輸出格式要求：
-- 使用「Action Verb + Context + Quantified Result」格式
-- 用繁體中文撰寫
-- 盡量量化成果
-- 專業但自信的語氣
+撰寫規範（Critical）：
+1. **絕對禁止編造數據**：如果原始日誌中沒有提到具體的百分比（如「提升 50%」）或具體時間數值，**請勿自行腦補或添加**。請使用定性的描述（如「顯著改善」、「成功導入」）來代替虛構的數字。
+2. **實事求是**：不要過度誇大。保持專業、精準。
+3. **格式**：使用「Action Verb + Context + Result」格式，繁體中文。
 
-如果只是日常瑣事（例如：參加會議、修小 bug、寫文件），則回傳 hasResumeWorthyContent: false
+如果本週沒有任何值得大書特書的成就，請直接回傳 hasResumeWorthyContent: false。不要為了湊數而產生內容。
 
 請以 JSON 格式返回：
 {
   "hasResumeWorthyContent": true/false,
   "bullets": [
     {
-      "text": "履歷條目文字（Action Verb + Context + Quantified Result）",
+      "text": "履歷條目文字（不含虛構數據）",
       "category": "Achievement/Skill/Project",
       "impactLevel": "High/Medium/Low",
-      "reasoning": "為什麼這個值得放進履歷"
+      "reasoning": "為什麼這個值得放進履歷（請簡述判斷依據）"
     }
   ]
 }`;
