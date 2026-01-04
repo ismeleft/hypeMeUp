@@ -1,5 +1,7 @@
 
-import { signIn } from "@/auth"
+"use client"
+
+import { signIn } from "next-auth/react"
 import { ShieldAlert } from "lucide-react"
 
 export default function LoginPage() {
@@ -33,19 +35,14 @@ export default function LoginPage() {
           // Identify Yourself
         </p>
 
-        <form
-          action={async () => {
-            "use server"
-            await signIn("google", { redirectTo: "/" })
-          }}
-        >
+        <div className="w-full">
           <button 
-            type="submit"
+            onClick={() => signIn("google", { callbackUrl: "/" })}
             className="w-full bg-black text-white text-2xl font-black py-4 border-4 border-transparent hover:bg-white hover:text-black hover:border-black transition-all duration-200 shadow-[8px_8px_0px_0px_#666] hover:shadow-[4px_4px_0px_0px_#000] active:translate-y-1 active:shadow-none flex items-center justify-center gap-3"
           >
             <span>SIGN IN WITH GOOGLE</span>
           </button>
-        </form>
+        </div>
 
         <div className="mt-6 text-xs font-bold text-gray-400 uppercase tracking-widest">
            System Restricted Area

@@ -5,18 +5,14 @@ import Google from "next-auth/providers/google"
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [Google],
   callbacks: {
-    async signIn({ profile }) {
-      if (!profile?.email) return false
+    async signIn({ user }) {
+      if (!user?.email) return false
       
       const allowedUsers = process.env.ALLOWED_USERS?.split(",") || []
       // Trim spaces just in case user added spaces in env var
       const cleanAllowedUsers = allowedUsers.map(u => u.trim())
       
-      return cleanAllowedUsers.includes(profile.email)
-    },
-    authorized: async ({ auth }) => {
-      // Logged in users are authenticated, otherwise redirect to login
-      return !!auth
+      return cleanAllowedUsers.includes(user.email)
     },
   },
   pages: {

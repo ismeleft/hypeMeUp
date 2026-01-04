@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import ConfettiEffect from "@/components/ConfettiEffect";
 import { signOut, useSession } from "next-auth/react";
-import { SessionProvider } from "next-auth/react";
 
 
 // 漫畫網點背景 (Halftone Pattern)
@@ -551,17 +550,19 @@ function SakamotoHype() {
 }
 
 function SignOutButton() {
-  const { data: session } = useSession();
-  if (!session?.user) return null;
+  const { data: session, status } = useSession();
+  
+  // 取得使用者名稱簡寫，如果還在讀取中或沒有email，顯示預設值
+  const agentName = session?.user?.email?.split("@")[0] || "CLASSIFIED";
 
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex items-center gap-2">
         <span className="text-[10px] font-black uppercase tracking-widest opacity-50 hidden sm:inline-block">
-          AGENT: {session.user.email?.split("@")[0]}
+          AGENT: {status === "loading" ? "LOADING..." : agentName}
         </span>
         <button
-          onClick={() => signOut()}
+          onClick={() => signOut({ callbackUrl: "/login" })}
           className="text-xs font-bold bg-black text-white px-2 py-1 rotate-3 hover:bg-red-600 hover:rotate-0 transition-all cursor-pointer"
         >
           LOGOUT
@@ -571,11 +572,4 @@ function SignOutButton() {
   );
 }
 
-export default function SakamotoHypeWrapper() {
-  return (
-    <SessionProvider>
-      <SakamotoHype />
-    </SessionProvider>
-  );
-}
-
+export default SakamotoHype;
