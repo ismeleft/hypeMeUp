@@ -12,6 +12,8 @@ import {
   Target,
 } from "lucide-react";
 import ConfettiEffect from "@/components/ConfettiEffect";
+import { signOut, useSession } from "next-auth/react";
+
 
 // 漫畫網點背景 (Halftone Pattern)
 const HalftoneBackground = () => (
@@ -102,7 +104,8 @@ interface RecentWin {
   createdAt: string;
 }
 
-export default function SakamotoHype() {
+function SakamotoHype() {
+
   const [input, setInput] = useState("");
   const [category, setCategory] = useState(""); // This holds the 'id' from categories array
   const [impact, setImpact] = useState(0);
@@ -243,17 +246,16 @@ export default function SakamotoHype() {
                   <br />
                   <span className="text-red-600">DAYS</span>
                 </h1>
-                <div className="text-right">
-                  <span className="block text-xs font-bold bg-black text-white px-2 py-1 rotate-3">
-                    NO KILL RULE
-                  </span>
-                  <span 
-                    className="block text-sm font-bold mt-1"
-                    suppressHydrationWarning
-                  >
-                    LOG #{new Date().getDate()}
-                  </span>
-                </div>
+                  <div className="text-right">
+                    <SignOutButton />
+                    <span 
+                      className="block text-sm font-bold mt-1"
+                      suppressHydrationWarning
+                    >
+                      LOG #{new Date().getDate()}
+                    </span>
+                  </div>
+
               </div>
               <p className="font-bold text-gray-500 uppercase tracking-widest text-xs">
                 // Report your daily achievements
@@ -544,4 +546,30 @@ export default function SakamotoHype() {
       </AnimatePresence>
     </div>
   );
+
 }
+
+function SignOutButton() {
+  const { data: session, status } = useSession();
+  
+  // 取得使用者名稱簡寫，如果還在讀取中或沒有email，顯示預設值
+  const agentName = session?.user?.email?.split("@")[0] || "CLASSIFIED";
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-widest opacity-50 hidden sm:inline-block">
+          AGENT: {status === "loading" ? "LOADING..." : agentName}
+        </span>
+        <button
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="text-xs font-bold bg-black text-white px-2 py-1 rotate-3 hover:bg-red-600 hover:rotate-0 transition-all cursor-pointer"
+        >
+          LOGOUT
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default SakamotoHype;
